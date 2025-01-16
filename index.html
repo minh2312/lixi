@@ -206,44 +206,10 @@
         <div class="modal-content">
             <h2>Kết Quả Bốc Thăm</h2>
             <p id="modal-result">Phần thưởng của bạn...</p>
-            <button class="close-btn" onclick="closeModal()">Đóng</button>
+            <input style="width: 220px;height: 30px;" type="text" id="name-input" placeholder="Nhập tên của bạn">
+            <button class="close-btn" onclick="closeModal()">Gửi</button>
         </div>
     </div>
-
-    <!-- <script>
-        // Mảng phần thưởng
-        const rewards = [
-            "Chúc bạn may mắn lần sau!",
-            "Trúng 50.000 VNĐ 🎁",
-            "Trúng 100.000 VNĐ 🎁",
-            "Trúng 200.000 VNĐ 🎁",
-            "Trúng 500.000 VNĐ 🎁",
-            "Trúng 1.000.000 VNĐ 🎉"
-        ];
-
-        // Hiển thị kết quả khi click
-        function pickReward(envelopeNumber, element) {
-            // Thêm animation lắc và nổ
-            element.classList.add("clicked");
-
-            // Chọn phần thưởng ngẫu nhiên
-            const randomIndex = Math.floor(Math.random() * rewards.length);
-            const reward = rewards[randomIndex];
-
-            // Hiển thị modal sau 1.5 giây
-            setTimeout(() => {
-                document.getElementById("modal-result").innerText = 
-                    `Bao lì xì ${envelopeNumber}: ${reward}`;
-                document.getElementById("modal").style.display = "flex";
-                element.classList.remove("clicked"); // Xóa animation
-            }, 1500);
-        }
-
-        // Đóng modal
-        function closeModal() {
-            document.getElementById("modal").style.display = "none";
-        }
-    </script> -->
 
     <script>
         async function getIPAddress() {
@@ -253,10 +219,10 @@
                 return data.ip;
             } catch (error) {
                 console.error('Lỗi khi lấy IP:', error);
-                return null; // Trả về null nếu có lỗi
+                return null;
             }
         }
-
+    
         const rewards = [
             { reward: "Trúng 20.000 VNĐ 🎁", weight: 78 },
             { reward: "Trúng 50.000 VNĐ 🎁", weight: 20 },
@@ -265,10 +231,8 @@
             { reward: "Trúng 500.000 VNĐ 🎁", weight: 0.000001 },
             { reward: "Trúng 1.000.000 VNĐ 🎉", weight: 0 }
         ];
-
-
+    
         function getWeightedReward() {
-
             const totalWeight = rewards.reduce((sum, item) => sum + item.weight, 0);
             let random = Math.random() * totalWeight;
             for (const item of rewards) {
@@ -279,55 +243,85 @@
             }
         }
 
+        async function hasUserPicked(ip) {
+            try {
+                const response = await fetch(`http://210.211.97.224:20009/find?ip=${ip}`);
+                if (response.status === 200) {
+                    const result = await response.json();
+                    return true; // Đã tồn tại trong DB
+                } else if (response.status === 404) {
+                    return false; // Không tồn tại trong DB
+                }
+            } catch (error) {
+                console.error('Lỗi khi kiểm tra người dùng:', error);
+                return true; // Mặc định là đã bốc thăm để ngăn lỗi
+            }
+        }
+    
         async function pickReward(envelopeNumber, element) {
             const ip = await getIPAddress();
-
+    
             if (!ip) {
                 alert("Không thể lấy địa chỉ IP của bạn.");
                 return;
             }
+    
+            const hasPicked = await hasUserPicked(ip);
 
-            // Kiểm tra xem IP đã bốc thăm chưa
-            if (localStorage.getItem(ip)) {
+            if (hasPicked) {
                 alert("Bạn đã bốc thăm rồi!");
                 return;
             }
-
+    
             element.classList.add("clicked");
             const reward = getWeightedReward();
-
-            setTimeout(async () => {
+    
+            setTimeout(() => {
                 document.getElementById("modal-result").innerText =
                     `Bao lì xì ${envelopeNumber}: ${reward}`;
                 document.getElementById("modal").style.display = "flex";
-                element.classList.remove("clicked"); // Xóa animation
-
+                element.classList.remove("clicked");
+    
                 // Lưu IP đã bốc thăm vào localStorage
-                localStorage.setItem(ip, true);
-
+                // localStorage.setItem(ip, true);
             }, 1500);
-
-            const rewardValue = parseInt(reward.match(/[\d.]+/)[0].replace(/\./g, '')); 
+    
+            // Lưu dữ liệu vào database sau khi nhập tên
+            async function saveData() {
+                const name = document.getElementById("name-input").value.trim();
+                if (!name) {
+                    alert("Vui lòng nhập tên của bạn trước khi đóng!");
+                    return;
+                }
+                
+                const rewardValue = parseInt(reward.match(/[\d.]+/)[0].replace(/\./g, ''));
                 try {
-                    const response = await fetch('http://127.0.0.1:5000/add', {
+                    // http://210.211.97.224:20009/add
+                    const response = await fetch('http://210.211.97.224:20009/add', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
                             ip: ip,
+                            name: name,
                             money: rewardValue
                         })
                     });
                     const result = await response.json();
+                    console.log('Kết quả lưu:', result);
+                    document.getElementById("modal").style.display = "none"; // Đóng modal sau khi lưu thành công
                 } catch (error) {
                     console.error('Lỗi khi gọi API:', error);
                 }
+            }
+    
+            // Gắn hàm saveData vào nút đóng modal
+            document.querySelector(".close-btn").onclick = saveData;
         }
-
-        // Đóng modal
+    
         function closeModal() {
-            document.getElementById("modal").style.display = "none";
+            alert("Vui lòng nhập tên trước khi đóng!");
         }
     </script>
 </body>
