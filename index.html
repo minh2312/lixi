@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bốc Thăm Bao Lì Xì</title>
+    <style>
+        /* Giao diện chung */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #fdf0d5;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: #c0392b;
+            margin-top: 20px;
+            font-size: 36px;
+        }
+
+        p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* Bao lì xì container */
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            gap: 20px;
+        }
+
+        /* Bao lì xì */
+        .envelope {
+            position: relative;
+            width: 120px;
+            height: 180px;
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+            border-radius: 15px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 3px solid #ffd700;
+            /* Viền vàng */
+        }
+
+        /* Hiệu ứng khi hover */
+        .envelope:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Chi tiết trang trí bên trong */
+        .envelope::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px dashed #ffd700;
+            /* Viền vàng bên trong */
+            border-radius: 12px;
+            opacity: 0.5;
+        }
+
+        /* Animation khi click */
+        .envelope.clicked {
+            animation: shakeAndGrow 1s ease forwards, explode 0.5s 1s ease forwards;
+        }
+
+        /* Lắc lắc và to dần */
+        @keyframes shakeAndGrow {
+            0% {
+                transform: scale(1) rotate(0);
+            }
+
+            25% {
+                transform: scale(1.1) rotate(-5deg);
+            }
+
+            50% {
+                transform: scale(1.2) rotate(5deg);
+            }
+
+            75% {
+                transform: scale(1.3) rotate(-5deg);
+            }
+
+            100% {
+                transform: scale(1.3) rotate(0);
+            }
+        }
+
+        /* Hiệu ứng nổ */
+        @keyframes explode {
+            0% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            animation: bounceIn 0.5s ease forwards;
+        }
+
+        /* Modal bật ra mượt mà */
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            60% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .modal-content h2 {
+            color: #c0392b;
+        }
+
+        .modal-content p {
+            font-size: 20px;
+            color: #27ae60;
+        }
+
+        .close-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .close-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .hidden-reward {
+            color: transparent;
+            background: #e74c3c;
+            /* Màu nền bao lì xì */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎉 Bốc Thăm Bao Lì Xì May Mắn 🎉</h1>
+    <p>Hãy chọn một bao lì xì để thử vận may của bạn!</p>
+
+    <!-- Danh sách bao lì xì -->
+    <div class="container">
+        <div class="envelope" onclick="pickReward(1, this)">1</div>
+        <div class="envelope" onclick="pickReward(2, this)">2</div>
+        <div class="envelope" onclick="pickReward(3, this)">3</div>
+        <div class="envelope" onclick="pickReward(4, this)">4</div>
+        <div class="envelope" onclick="pickReward(5, this)">5</div>
+        <div class="envelope" onclick="pickReward(6, this)">6</div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2>Kết Quả Bốc Thăm</h2>
+            <p id="modal-result">Phần thưởng của bạn...</p>
+            <button class="close-btn" onclick="closeModal()">Đóng</button>
+        </div>
+    </div>
+
+    <!-- <script>
+        // Mảng phần thưởng
+        const rewards = [
+            "Chúc bạn may mắn lần sau!",
+            "Trúng 50.000 VNĐ 🎁",
+            "Trúng 100.000 VNĐ 🎁",
+            "Trúng 200.000 VNĐ 🎁",
+            "Trúng 500.000 VNĐ 🎁",
+            "Trúng 1.000.000 VNĐ 🎉"
+        ];
+
+        // Hiển thị kết quả khi click
+        function pickReward(envelopeNumber, element) {
+            // Thêm animation lắc và nổ
+            element.classList.add("clicked");
+
+            // Chọn phần thưởng ngẫu nhiên
+            const randomIndex = Math.floor(Math.random() * rewards.length);
+            const reward = rewards[randomIndex];
+
+            // Hiển thị modal sau 1.5 giây
+            setTimeout(() => {
+                document.getElementById("modal-result").innerText = 
+                    `Bao lì xì ${envelopeNumber}: ${reward}`;
+                document.getElementById("modal").style.display = "flex";
+                element.classList.remove("clicked"); // Xóa animation
+            }, 1500);
+        }
+
+        // Đóng modal
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+    </script> -->
+
+    <script>
+        async function getIPAddress() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error('Lỗi khi lấy IP:', error);
+                return null; // Trả về null nếu có lỗi
+            }
+        }
+
+        const rewards = [
+            { reward: "Trúng 20.000 VNĐ 🎁", weight: 78 },
+            { reward: "Trúng 50.000 VNĐ 🎁", weight: 20 },
+            { reward: "Trúng 100.000 VNĐ 🎁", weight: 0.1 },
+            { reward: "Trúng 200.000 VNĐ 🎁", weight: 0.001 },
+            { reward: "Trúng 500.000 VNĐ 🎁", weight: 0.000001 },
+            { reward: "Trúng 1.000.000 VNĐ 🎉", weight: 0 }
+        ];
+
+
+        function getWeightedReward() {
+
+            const totalWeight = rewards.reduce((sum, item) => sum + item.weight, 0);
+            let random = Math.random() * totalWeight;
+            for (const item of rewards) {
+                if (random < item.weight) {
+                    return item.reward;
+                }
+                random -= item.weight;
+            }
+        }
+
+        async function pickReward(envelopeNumber, element) {
+            const ip = await getIPAddress();
+
+            if (!ip) {
+                alert("Không thể lấy địa chỉ IP của bạn.");
+                return;
+            }
+
+            // Kiểm tra xem IP đã bốc thăm chưa
+            if (localStorage.getItem(ip)) {
+                alert("Bạn đã bốc thăm rồi!");
+                return;
+            }
+
+            element.classList.add("clicked");
+            const reward = getWeightedReward();
+
+            setTimeout(async () => {
+                document.getElementById("modal-result").innerText =
+                    `Bao lì xì ${envelopeNumber}: ${reward}`;
+                document.getElementById("modal").style.display = "flex";
+                element.classList.remove("clicked"); // Xóa animation
+
+                // Lưu IP đã bốc thăm vào localStorage
+                localStorage.setItem(ip, true);
+
+            }, 1500);
+
+            const rewardValue = parseInt(reward.match(/[\d.]+/)[0].replace(/\./g, '')); 
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ip: ip,
+                            money: rewardValue
+                        })
+                    });
+                    const result = await response.json();
+                } catch (error) {
+                    console.error('Lỗi khi gọi API:', error);
+                }
+        }
+
+        // Đóng modal
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>
